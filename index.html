@@ -3,28 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculateur de Date Mobile</title>
+    <title>Calculateur de Date Avancé (SEP)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Personnalisation du body pour centrage et fond */
+        /* Personnalisation du body pour centrage total et image de fond */
         body {
-            background-color: #f0f4f8; 
+            /* Propriétés de fond de l'image (À remplacer par votre chemin ou URL) */
+            background-image: url('TA.jpg'); 
+            background-size: 30%;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            background-color: #f0f4f8; /* Couleur de secours */
+
+            /* Propriétés pour le centrage horizontal et vertical */
             font-family: Arial, sans-serif;
-            min-height: 100vh; /* Assure que le corps prend toute la hauteur de la vue */
-            display: flex; /* Active Flexbox */
-            justify-content: center; /* Centre horizontalement le contenu */
-            align-items: flex-start; /* Aligne le contenu en haut (sinon il serait au milieu de l'écran par défaut) */
-            padding-top: 40px; /* Ajout d'une marge au-dessus pour le dégager du haut de l'écran */
-            padding-bottom: 40px;
+            min-height: 100vh;
+            display: flex; 
+            justify-content: center; /* Centre horizontalement */
+            align-items: center; /* Centre verticalement */
+            padding: 20px;
+            margin: 0;
         }
         
         /* Classe app-container pour la boîte simulant l'application */
         .app-container {
-            max-width: 450px; /* Taille typique d'un écran de smartphone */
+            max-width: 450px; 
             width: 100%; 
-            background-color: #ffffff;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15); /* Ombre plus visible */
-            border-radius: 12px; /* Coins arrondis pour un look moderne */
+            background-color: #ffffff; /* Fond blanc pour la lisibilité sur l'image */
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3); /* Ombre pour détacher de l'arrière-plan */
+            border-radius: 12px; 
             overflow: hidden; 
         }
         .header {
@@ -50,14 +57,14 @@
             <label for="jours-a-ajouter" class="block text-sm font-medium text-gray-700 mb-2">
                 Nombre de jours à ajouter/soustraire (ex: 5 ou -10)
             </label>
-            <input type="number" id="jours-a-ajouter" value="28"
+            <input type="number" id="jours-a-ajouter" value="0"
                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-center text-xl shadow-sm"
                    placeholder="Entrez un nombre de jours">
         </div>
 
         <button onclick="calculerDate()"
                 class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg shadow-md transition duration-150 ease-in-out transform hover:scale-105">
-            Calculer la Nouvelle Date
+            Calculer la Nouvelle Date (Automatique)
         </button>
 
         <div id="resultats-section" class="mt-8 p-5 border border-gray-200 rounded-lg hidden">
@@ -65,12 +72,12 @@
 
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-600">Calendrier Grégorien</label>
-                <p id="date-grego" class="text-xl font-extrabold text-pink-600 mt-1"></p>
+                <p id="date-grego" class="text-xl font-extrabold text-green-600 mt-1"></p>
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-600">Calendrier Lunaire (Hijri)</label>
-                <p id="date-lunaire" class="text-xl font-extrabold text-green-600 mt-1"></p>
+                <p id="date-lunaire" class="text-xl font-extrabold text-red-600 mt-1"></p>
             </div>
         </div>
 
@@ -98,7 +105,7 @@
         const erreurMessage = document.getElementById('erreur-message');
 
         // Validation de l'entrée
-        if (isNaN(joursAAjouter)) {
+        if (inputElement.value === '' || isNaN(joursAAjouter)) {
             erreurMessage.classList.remove('hidden');
             resultatsSection.classList.add('hidden');
             return;
@@ -114,8 +121,6 @@
         // 2. Formatage Grégorien (Format : EEEE d MMMM yyyy)
         const optionsGregorian = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
         let dateGregoFormatted = nouvelleDate.toLocaleDateString('fr-FR', optionsGregorian);
-        
-        // Mettre la première lettre en majuscule pour la langue française
         dateGregoFormatted = dateGregoFormatted.charAt(0).toUpperCase() + dateGregoFormatted.slice(1);
 
         // 3. Formatage Lunaire/Hijri
@@ -124,11 +129,9 @@
             day: 'numeric',
             month: 'long',
             year: 'numeric',
-            calendar: 'islamic-umalqura' // Standard pour le calendrier Hijri
+            calendar: 'islamic-umalqura'
         };
         const dateHijriFormatted = nouvelleDate.toLocaleDateString('ar-DZ', optionsHijri);
-        
-        // Nettoyage et affichage (suppression des suffixes Hijri si présents)
         const hijriDisplay = dateHijriFormatted.replace(/هـ/g, '').trim();
 
 
@@ -139,8 +142,19 @@
         resultatsSection.classList.remove('hidden');
     }
 
-    // Initialisation : Afficher la date du jour au chargement de la page
-    window.onload = afficherDateAujourdhui;
+    // Fonction d'initialisation et d'ajout de l'écouteur d'événement
+    function initialiserApplication() {
+        afficherDateAujourdhui();
+        calculerDate(); // Calcul initial avec la valeur '0'
+        
+        // Ajout de l'écouteur 'input' pour le calcul automatique
+        const inputElement = document.getElementById('jours-a-ajouter');
+        inputElement.addEventListener('input', calculerDate);
+        inputElement.addEventListener('change', calculerDate); // Écoute pour les flèches (spinners) du champ number
+    }
+
+    // Lancement de l'initialisation au chargement de la page
+    window.onload = initialiserApplication;
 </script>
 
 </body>
