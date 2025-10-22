@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculateur de Date Avancé (SEP)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Personnalisation du body pour centrage total et image de fond */
+        body {
+            /* Propriétés de fond de l'image (À remplacer par votre chemin ou URL) */
+            background-image: url('TA.jpg'); 
+            background-size: 30%;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            background-color: #f0f4f8; /* Couleur de secours */
+
+            /* Propriétés pour le centrage horizontal et vertical */
+            font-family: Arial, sans-serif;
+            min-height: 100vh;
+            display: flex; 
+            justify-content: center; /* Centre horizontalement */
+            align-items: center; /* Centre verticalement */
+            padding: 20px;
+            margin: 0;
+        }
+        
+        /* Classe app-container pour la boîte simulant l'application */
+        .app-container {
+            max-width: 450px; 
+            width: 100%; 
+            background-color: #ffffff; /* Fond blanc pour la lisibilité sur l'image */
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3); /* Ombre pour détacher de l'arrière-plan */
+            border-radius: 12px; 
+            overflow: hidden; 
+        }
+        .header {
+            background-color: #4c51bf; /* Couleur primaire (Indigo) */
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header class="header p-4 shadow-md">
+        <h1 class="text-xl font-bold">Calculateur de Date Avancé</h1>
+    </header>
+
+    <main class="p-6">
+        <div class="mb-6 p-4 bg-gray-100 rounded-lg border-l-4 border-indigo-500">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Date d'aujourd'hui (Grégorien)</label>
+            <p id="date-aujourdhui" class="text-lg font-semibold text-indigo-700"></p>
+        </div>
+
+        <div class="mb-8">
+            <label for="jours-a-ajouter" class="block text-sm font-medium text-gray-700 mb-2">
+                Nombre de jours à ajouter/soustraire (ex: 5 ou -10)
+            </label>
+            <input type="number" id="jours-a-ajouter" value="0"
+                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-center text-xl shadow-sm"
+                   placeholder="Entrez un nombre de jours">
+        </div>
+
+        <button onclick="calculerDate()"
+                class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg shadow-md transition duration-150 ease-in-out transform hover:scale-105">
+            Calculer la Nouvelle Date (Automatique)
+        </button>
+
+        <div id="resultats-section" class="mt-8 p-5 border border-gray-200 rounded-lg hidden">
+            <h2 class="text-lg font-bold text-gray-800 mb-3 border-b pb-2">Nouvelle Date Calculée</h2>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-600">Calendrier Grégorien</label>
+                <p id="date-grego" class="text-xl font-extrabold text-green-600 mt-1"></p>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-600">Calendrier Lunaire (Hijri)</label>
+                <p id="date-lunaire" class="text-xl font-extrabold text-red-600 mt-1"></p>
+            </div>
+        </div>
+
+        <div id="erreur-message" class="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded hidden">
+            Veuillez entrer un nombre valide de jours.
+        </div>
+    </main>
+</div>
+
+<script>
+    // Fonction pour obtenir la date d'aujourd'hui au format requis
+    function afficherDateAujourdhui() {
+        const aujourdhui = new Date();
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        
+        // Affichage de la date d'aujourd'hui
+        document.getElementById('date-aujourdhui').textContent = aujourdhui.toLocaleDateString('fr-FR', options);
+    }
+
+    // Fonction principale de calcul
+    function calculerDate() {
+        const inputElement = document.getElementById('jours-a-ajouter');
+        const joursAAjouter = parseInt(inputElement.value);
+        const resultatsSection = document.getElementById('resultats-section');
+        const erreurMessage = document.getElementById('erreur-message');
+
+        // Validation de l'entrée
+        if (inputElement.value === '' || isNaN(joursAAjouter)) {
+            erreurMessage.classList.remove('hidden');
+            resultatsSection.classList.add('hidden');
+            return;
+        }
+
+        erreurMessage.classList.add('hidden');
+
+        // 1. Calcul de la nouvelle date
+        const dateActuelle = new Date();
+        const nouvelleDate = new Date(dateActuelle.getTime());
+        nouvelleDate.setDate(dateActuelle.getDate() + joursAAjouter);
+
+        // 2. Formatage Grégorien (Format : EEEE d MMMM yyyy)
+        const optionsGregorian = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+        let dateGregoFormatted = nouvelleDate.toLocaleDateString('fr-FR', optionsGregorian);
+        dateGregoFormatted = dateGregoFormatted.charAt(0).toUpperCase() + dateGregoFormatted.slice(1);
+
+        // 3. Formatage Lunaire/Hijri
+        const optionsHijri = {
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+            calendar: 'islamic-umalqura'
+        };
+        const dateHijriFormatted = nouvelleDate.toLocaleDateString('ar-DZ', optionsHijri);
+        const hijriDisplay = dateHijriFormatted.replace(/هـ/g, '').trim();
+
+
+        // 4. Affichage des résultats
+        document.getElementById('date-grego').textContent = dateGregoFormatted;
+        document.getElementById('date-lunaire').textContent = hijriDisplay;
+
+        resultatsSection.classList.remove('hidden');
+    }
+
+    // Fonction d'initialisation et d'ajout de l'écouteur d'événement
+    function initialiserApplication() {
+        afficherDateAujourdhui();
+        calculerDate(); // Calcul initial avec la valeur '0'
+        
+        // Ajout de l'écouteur 'input' pour le calcul automatique
+        const inputElement = document.getElementById('jours-a-ajouter');
+        inputElement.addEventListener('input', calculerDate);
+        inputElement.addEventListener('change', calculerDate); // Écoute pour les flèches (spinners) du champ number
+    }
+
+    // Lancement de l'initialisation au chargement de la page
+    window.onload = initialiserApplication;
+</script>
+
+</body>
+</html>
