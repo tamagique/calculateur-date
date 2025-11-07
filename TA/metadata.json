@@ -1,0 +1,5 @@
+
+{
+  "name": "Algerian Date Calculator",
+  "description": "A web application to calculate future Gregorian and Hijri dates based on the Algerian calendar, highlighting weekends and public holidays."
+}
