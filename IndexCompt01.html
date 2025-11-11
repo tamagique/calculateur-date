@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculateur de Date Avancé (Mobile)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* CSS pour l'aspect mobile et le centrage */
+        body {
+            /* Propriétés pour le centrage horizontal et vertical */
+            font-family: Arial, sans-serif;
+            min-height: 100vh;
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            padding: 20px;
+            margin: 0;
+            background-color: #f0f4f8; /* Ajout d'une couleur de fond */
+        }
+        
+        /* Conteneur de l'application (simule l'écran) */
+        .app-container {
+            max-width: 450px; 
+            width: 100%; 
+            background-color: #ffffff; 
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3); 
+            border-radius: 12px; 
+            overflow: hidden; 
+        }
+        .header {
+            background-color: #4c51bf;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 10px; 
+        }
+        .app-icon {
+            margin-bottom: 15px;
+            border-radius: 50%; 
+            border: 4px solid white;
+        }
+
+        /* DÉFINITION DE L'ANIMATION CLIGNOTANTE */
+        @keyframes blinker {
+            50% { opacity: 0; }
+        }
+        
+        /* CLASSE POUR LE CLIGNOTEMENT DES JOURS FÉRIÉS */
+        .clignotant {
+            animation: blinker 1s linear infinite;
+            font-weight: bold !important;
+            color: #ff5722 !important; /* Couleur orange/rouge pour l'alerte */
+        }
+
+        .ferie-info {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #e53e3e; /* Rouge */
+        }
+
+        /* STYLE POUR LE PIED DE PAGE */
+        .footer-content {
+            background-color: #f7f7f7;
+            padding: 10px 24px;
+            border-top: 1px solid #e0e0e0;
+            font-size: 0.8rem;
+        }
+
+        /* STYLE DU COMPTEUR DE VISITEURS */
+        #compteur-visiteurs {
+            display: block;
+            text-align: right;
+            color: #9ca3af;
+            font-size: 0.75rem;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header class="header p-4 shadow-md">
+        <img src="TA.jpg" alt="Icône principale" class="app-icon w-16 h-16"> 
+        
+        <h1 class="text-xl font-bold mb-3">Calculateur de Date Avancé</h1>
+    </header>
+
+    <main class="p-6">
+        <div class="mb-6 p-4 bg-gray-100 rounded-lg border-l-4 border-indigo-500">
+            <div class="flex items-center mb-2">
+                <img src="TA.jpg" alt="Icône calendrier" class="w-5 h-5 mr-2"> 
+                <label class="text-sm font-medium text-gray-700">Date d'aujourd'hui (Grégorien)</label>
+            </div>
+            <p id="date-aujourdhui" class="text-lg font-semibold text-indigo-700"></p>
+        </div>
+
+        <div class="mb-8">
+            <label for="jours-a-ajouter" class="block text-sm font-medium text-gray-700 mb-2">
+                Nombre de jours à ajouter/soustraire (ex: 5 ou -10)
+            </label>
+            <input type="number" id="jours-a-ajouter" value="28"
+                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-center text-xl shadow-sm"
+                   placeholder="Entrez un nombre de jours">
+        </div>
+
+        <div id="resultats-section" class="mt-8 p-5 border border-gray-200 rounded-lg hidden">
+            <h2 class="text-lg font-bold text-gray-800 mb-3 border-b pb-2">Nouvelle Date Calculée</h2>
+
+            <div class="mb-4">
+                <div class="flex items-center">
+                    <img src="TA.jpg" alt="Icône Grégorien" class="w-4 h-4 mr-2">
+                    <label class="text-sm font-medium text-gray-600">Calendrier Grégorien</label>
+                </div>
+                <p id="date-grego" class="text-xl font-extrabold text-green-600 mt-1"></p>
+                <span id="ferie-gregorian-name" class="ferie-info hidden"></span>
+            </div>
+
+            <div>
+                <div class="flex items-center">
+                    <img src="TA.jpg" alt="Icône Lunaire" class="w-4 h-4 mr-2"> 
+                    <label class="text-sm font-medium text-gray-600">Calendrier Lunaire (Hijri)</label>
+                </div>
+                <p id="date-lunaire" class="text-xl font-extrabold text-red-600 mt-1"></p>
+                <span id="ferie-hijri-name" class="ferie-info hidden"></span>
+            </div>
+        </div>
+
+        <div id="erreur-message" class="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded hidden">
+            Veuillez entrer un nombre valide de jours.
+        </div>
+    </main>
+
+    <footer class="footer-content">
+        <p id="compteur-visiteurs">Chargement du compteur...</p>
+    </footer>
+    </div>
+
+<script>
+    // --- LISTE DES JOURS FÉRIÉS ALGÉRIENS (ANNÉE 2025) ---
+    const joursFeries = [
+        // Jours fériés civils (Fixes)
+        { month: 0, day: 1, name: "Jour de l'An (Grégorien)" }, { month: 0, day: 12, name: "Yennayer (Nouvel An Berbère)" }, 
+        { month: 4, day: 1, name: "Fête du Travail" }, { month: 6, day: 5, name: "Fête de l'Indépendance" }, 
+        { month: 9, day: 1, name: "Fête de la Révolution" }, 
+        
+        // Jours fériés religieux (Dates Grégoriennes prévues pour 2025)
+        { month: 2, day: 31, name: "Aïd el-Fitr (1er jour)" }, { month: 3, day: 1, name: "Aïd el-Fitr (2ème jour)" }, 
+        { month: 3, day: 2, name: "Aïd el-Fitr (3ème jour)" },
+        { month: 5, day: 6, name: "Aïd el-Adha (1er jour)" }, { month: 5, day: 7, name: "Aïd el-Adha (2ème jour)" }, 
+        { month: 5, day: 8, name: "Aïd el-Adha (3ème jour)" },
+        { month: 5, day: 27, name: "Awal Mouharram (Nouvel An Hégirien)" }, 
+        { month: 6, day: 5, name: "Achoura" }, 
+        { month: 8, day: 4, name: "Mouloud (Mawlid Ennabaoui)" }
+    ];
+
+    // --- FONCTION DE GESTION DU COMPTEUR CÔTÉ SERVEUR (PHP) ---
+    function gererCompteurServeur() {
+        // L'URL du script PHP qui va lire et incrémenter Visit.txt
+        const url_compteur = 'increment_counter.php'; 
+        
+        fetch(url_compteur)
+            .then(response => {
+                if (!response.ok) {
+                    // Si le PHP ne répond pas correctement
+                    throw new Error(`Erreur HTTP: ${response.status}`);
+                }
+                return response.text();
+            })
+            .then(compteur_value => {
+                // Afficher la valeur reçue du serveur
+                document.getElementById('compteur-visiteurs').textContent = `Visites totales : ${compteur_value}`;
+            })
+            .catch(error => {
+                console.error("Erreur compteur:", error);
+                document.getElementById('compteur-visiteurs').textContent = "Compteur non disponible (Erreur Serveur/PHP).";
+            });
+    }
+
+    // --- FONCTION DE VÉRIFICATION DES JOURS FÉRIÉS ---
+    function getJourFerieName(date) {
+        const day = date.getDate();
+        const month = date.getMonth(); // 0-11
+        const ferieMatch = joursFeries.find(ferie => ferie.day === day && ferie.month === month);
+        if (ferieMatch) return ferieMatch.name;
+
+        const dayOfWeek = date.getDay(); // Dimanche=0, Samedi=6
+        if (dayOfWeek === 5) return "Jour de repos (Vendredi)";
+        if (dayOfWeek === 6) return "Jour de repos (Samedi)";
+
+        return null;
+    }
+
+
+    // --- FONCTIONS DE MISE À JOUR DE L'INTERFACE ---
+    function afficherDateAujourdhui() {
+        const aujourdhui = new Date();
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('date-aujourdhui').textContent = aujourdhui.toLocaleDateString('fr-FR', options);
+    }
+
+    function calculerDate() {
+        const inputElement = document.getElementById('jours-a-ajouter');
+        const joursAAjouter = parseInt(inputElement.value);
+        const resultatsSection = document.getElementById('resultats-section');
+        const erreurMessage = document.getElementById('erreur-message');
+        
+        const dateGregoElement = document.getElementById('date-grego');
+        const dateLunaireElement = document.getElementById('date-lunaire');
+        const ferieGregoNameElement = document.getElementById('ferie-gregorian-name');
+        const ferieHijriNameElement = document.getElementById('ferie-hijri-name');
+
+        // Réinitialisation
+        dateGregoElement.classList.remove('clignotant');
+        dateLunaireElement.classList.remove('clignotant');
+        ferieGregoNameElement.classList.add('hidden');
+        ferieHijriNameElement.classList.add('hidden');
+
+        if (inputElement.value === '' || isNaN(joursAAjouter)) {
+            erreurMessage.classList.remove('hidden');
+            resultatsSection.classList.add('hidden');
+            return;
+        }
+
+        erreurMessage.classList.add('hidden');
+
+        // 1. Calcul de la nouvelle date
+        const dateActuelle = new Date();
+        const nouvelleDate = new Date(dateActuelle.getTime());
+        nouvelleDate.setDate(dateActuelle.getDate() + joursAAjouter);
+
+        // 2. Vérification du jour férié
+        const ferieName = getJourFerieName(nouvelleDate);
+        if (ferieName) {
+            // Application du style clignotant et du nom
+            dateGregoElement.classList.add('clignotant');
+            dateLunaireElement.classList.add('clignotant');
+            ferieGregoNameElement.textContent = `🚨 Jour Férié/Repos : ${ferieName}`;
+            ferieHijriNameElement.textContent = `🚨 يوم عطلة/راحة : ${ferieName}`;
+            ferieGregoNameElement.classList.remove('hidden');
+            ferieHijriNameElement.classList.remove('hidden');
+        }
+
+        // 3. Formatage Grégorien
+        const optionsGregorian = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+        let dateGregoFormatted = nouvelleDate.toLocaleDateString('fr-FR', optionsGregorian);
+        dateGregoFormatted = dateGregoFormatted.charAt(0).toUpperCase() + dateGregoFormatted.slice(1);
+
+        // 4. Formatage Lunaire/Hijri
+        const optionsHijri = {
+            weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', calendar: 'islamic-umalqura'
+        };
+        const dateHijriFormatted = nouvelleDate.toLocaleDateString('ar-DZ', optionsHijri);
+        const hijriDisplay = dateHijriFormatted.replace(/هـ/g, '').trim();
+
+        // 5. Affichage des résultats
+        dateGregoElement.textContent = dateGregoFormatted;
+        dateLunaireElement.textContent = hijriDisplay;
+        resultatsSection.classList.remove('hidden');
+    }
+
+    // Fonction d'initialisation
+    function initialiserApplication() {
+        gererCompteurServeur(); 
+        afficherDateAujourdhui();
+        calculerDate(); 
+        
+        const inputElement = document.getElementById('jours-a-ajouter');
+        inputElement.addEventListener('input', calculerDate);
+        inputElement.addEventListener('change', calculerDate);
+    }
+
+    // Lancement de l'initialisation au chargement de la page
+    window.onload = initialiserApplication;
+</script>
+
+</body>
+</html>
