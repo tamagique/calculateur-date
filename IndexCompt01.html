@@ -8,7 +8,7 @@
     <style>
         /* CSS pour l'aspect mobile et le centrage */
         body {
-            /* Propriétés pour le centrage horizontal et vertical */
+            /* ... (Styles existants) ... */
             font-family: Arial, sans-serif;
             min-height: 100vh;
             display: flex; 
@@ -16,7 +16,6 @@
             align-items: center; 
             padding: 20px;
             margin: 0;
-            background-color: #f0f4f8; /* Ajout d'une couleur de fond */
         }
         
         /* Conteneur de l'application (simule l'écran) */
@@ -29,6 +28,7 @@
             overflow: hidden; 
         }
         .header {
+            /* ... (Styles existants) ... */
             background-color: #4c51bf;
             color: white;
             display: flex;
@@ -36,46 +36,33 @@
             align-items: center;
             padding-top: 10px; 
         }
-        .app-icon {
-            margin-bottom: 15px;
-            border-radius: 50%; 
-            border: 4px solid white;
-        }
-
-        /* DÉFINITION DE L'ANIMATION CLIGNOTANTE */
-        @keyframes blinker {
-            50% { opacity: 0; }
-        }
-        
-        /* CLASSE POUR LE CLIGNOTEMENT DES JOURS FÉRIÉS */
+        /* ... (Styles existants pour .clignotant, .ferie-info, etc.) ... */
         .clignotant {
             animation: blinker 1s linear infinite;
             font-weight: bold !important;
-            color: #ff5722 !important; /* Couleur orange/rouge pour l'alerte */
+            color: #ff5722 !important; 
         }
-
+        @keyframes blinker {
+            50% { opacity: 0; }
+        }
         .ferie-info {
             display: block;
             font-size: 0.8rem;
             font-weight: 600;
-            color: #e53e3e; /* Rouge */
+            color: #e53e3e;
         }
-
-        /* STYLE POUR LE PIED DE PAGE */
+        /* Style pour le pied de page */
         .footer-content {
             background-color: #f7f7f7;
             padding: 10px 24px;
             border-top: 1px solid #e0e0e0;
-            font-size: 0.8rem;
-        }
-
-        /* STYLE DU COMPTEUR DE VISITEURS */
-        #compteur-visiteurs {
-            display: block;
             text-align: right;
-            color: #9ca3af;
+        }
+        #compteur-container {
             font-size: 0.75rem;
-            margin-top: 5px;
+            color: #9ca3af;
+            display: inline-block;
+            margin-left: auto;
         }
     </style>
 </head>
@@ -84,7 +71,6 @@
 <div class="app-container">
     <header class="header p-4 shadow-md">
         <img src="TA.jpg" alt="Icône principale" class="app-icon w-16 h-16"> 
-        
         <h1 class="text-xl font-bold mb-3">Calculateur de Date Avancé</h1>
     </header>
 
@@ -134,7 +120,10 @@
     </main>
 
     <footer class="footer-content">
-        <p id="compteur-visiteurs">Chargement du compteur...</p>
+        <div id="compteur-container">
+            Visites totales : 
+            <img src="https://visitor-badge.laxmi.dev/badge?page_id=moncalculateur-algerie-v1" alt="Compteur de visiteurs">
+        </div>
     </footer>
     </div>
 
@@ -156,33 +145,10 @@
         { month: 8, day: 4, name: "Mouloud (Mawlid Ennabaoui)" }
     ];
 
-    // --- FONCTION DE GESTION DU COMPTEUR CÔTÉ SERVEUR (PHP) ---
-    function gererCompteurServeur() {
-        // L'URL du script PHP qui va lire et incrémenter Visit.txt
-        const url_compteur = 'increment_counter.php'; 
-        
-        fetch(url_compteur)
-            .then(response => {
-                if (!response.ok) {
-                    // Si le PHP ne répond pas correctement
-                    throw new Error(`Erreur HTTP: ${response.status}`);
-                }
-                return response.text();
-            })
-            .then(compteur_value => {
-                // Afficher la valeur reçue du serveur
-                document.getElementById('compteur-visiteurs').textContent = `Visites totales : ${compteur_value}`;
-            })
-            .catch(error => {
-                console.error("Erreur compteur:", error);
-                document.getElementById('compteur-visiteurs').textContent = "Compteur non disponible (Erreur Serveur/PHP).";
-            });
-    }
-
     // --- FONCTION DE VÉRIFICATION DES JOURS FÉRIÉS ---
     function getJourFerieName(date) {
         const day = date.getDate();
-        const month = date.getMonth(); // 0-11
+        const month = date.getMonth(); 
         const ferieMatch = joursFeries.find(ferie => ferie.day === day && ferie.month === month);
         if (ferieMatch) return ferieMatch.name;
 
@@ -212,7 +178,7 @@
         const ferieGregoNameElement = document.getElementById('ferie-gregorian-name');
         const ferieHijriNameElement = document.getElementById('ferie-hijri-name');
 
-        // Réinitialisation
+        // Réinitialisation des classes et des messages
         dateGregoElement.classList.remove('clignotant');
         dateLunaireElement.classList.remove('clignotant');
         ferieGregoNameElement.classList.add('hidden');
@@ -237,23 +203,28 @@
             // Application du style clignotant et du nom
             dateGregoElement.classList.add('clignotant');
             dateLunaireElement.classList.add('clignotant');
-            ferieGregoNameElement.textContent = `🚨 Jour Férié/Repos : ${ferieName}`;
-            ferieHijriNameElement.textContent = `🚨 يوم عطلة/راحة : ${ferieName}`;
+            ferieGregoNameElement.textContent = `🚨 Jour Férié : ${ferieName}`;
+            ferieHijriNameElement.textContent = `🚨 Jour Férié : ${ferieName}`;
             ferieGregoNameElement.classList.remove('hidden');
             ferieHijriNameElement.classList.remove('hidden');
         }
 
-        // 3. Formatage Grégorien
+        // 3. Formatage Grégorien (EEEE d MMMM yyyy)
         const optionsGregorian = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
         let dateGregoFormatted = nouvelleDate.toLocaleDateString('fr-FR', optionsGregorian);
         dateGregoFormatted = dateGregoFormatted.charAt(0).toUpperCase() + dateGregoFormatted.slice(1);
 
         // 4. Formatage Lunaire/Hijri
         const optionsHijri = {
-            weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', calendar: 'islamic-umalqura'
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+            calendar: 'islamic-umalqura'
         };
         const dateHijriFormatted = nouvelleDate.toLocaleDateString('ar-DZ', optionsHijri);
         const hijriDisplay = dateHijriFormatted.replace(/هـ/g, '').trim();
+
 
         // 5. Affichage des résultats
         dateGregoElement.textContent = dateGregoFormatted;
@@ -261,11 +232,10 @@
         resultatsSection.classList.remove('hidden');
     }
 
-    // Fonction d'initialisation
+    // Fonction d'initialisation et d'ajout de l'écouteur d'événement
     function initialiserApplication() {
-        gererCompteurServeur(); 
         afficherDateAujourdhui();
-        calculerDate(); 
+        calculerDate(); // Calcul initial avec la valeur '28'
         
         const inputElement = document.getElementById('jours-a-ajouter');
         inputElement.addEventListener('input', calculerDate);
